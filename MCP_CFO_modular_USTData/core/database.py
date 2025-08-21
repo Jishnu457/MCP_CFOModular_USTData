@@ -76,7 +76,7 @@ class DatabaseManager:
         config = ConfigManager.get_database_config()
         
         connection_string = (
-            f"Driver={{ODBC Driver 17 for SQL Server}};"
+            f"Driver={{ODBC Driver 18 for SQL Server}};"
             f"Server={config['sql_endpoint']};"
             f"Database={config['database']};"
             f"Authentication=ActiveDirectoryServicePrincipal;"
