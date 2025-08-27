@@ -181,8 +181,7 @@ class ResponseFormatter:
         
         Rewrite this as a helpful, encouraging response like Claude would give:
         - Don't mention technical errors
-        - Be supportive and solution-focused
-        - Offer specific alternatives
+        - Be supportive and solution-focused       
         - Acknowledge what they were trying to do
         - Guide them toward success
         - Use encouraging, friendly tone
