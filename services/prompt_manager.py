@@ -20,130 +20,7 @@ class PromptManager:
     def load_base_prompt(self):
         """Enhanced base prompt with comprehensive few-shot learning"""
 
-        few_shot_examples = """
------- EXAMPLE 1: Revenue Analysis with Date Column (dd-mm-yyyy format)
-User: Show me revenue for Brown Ltd in 2024 and 2025
-System: For tables with actual date columns, use DATEPART with CAST for data consistency:
-
-SELECT 
-    [Client],
-    DATEPART(YEAR, [Date]) AS [Year],
-    SUM(CAST(ISNULL([Revenue], 0) AS DECIMAL(18,2))) AS [Total_Revenue]
-FROM [dbo].[Financial] 
-WHERE [Client] = 'Brown Ltd' 
-    AND DATEPART(YEAR, [Date]) IN (2024, 2025)
-GROUP BY [Client], DATEPART(YEAR, [Date])
-ORDER BY [Year];
-
------- EXAMPLE 2: Analysis with Month Column Format (Nov_23, Dec_23, etc.)
-User: Show me values for employee E3 in 2024
-System: For tables with month columns (Nov_23 format), filter by month pattern with CAST:
-
-SELECT 
-    [employee],
-    [location],
-    CASE 
-        WHEN [month] LIKE '%_24' THEN '2024'
-        WHEN [month] LIKE '%_23' THEN '2023'
-    END AS [Year],
-    SUM(CAST(ISNULL([value], 0) AS DECIMAL(18,2))) AS [Total_Value]
-FROM [dbo].[Employee_Level] 
-WHERE [employee] = 'E3' AND [month] LIKE '%_24'
-GROUP BY [employee], [location], 
-    CASE 
-        WHEN [month] LIKE '%_24' THEN '2024'
-        WHEN [month] LIKE '%_23' THEN '2023'
-    END
-ORDER BY [Year];
-
------- EXAMPLE 3: Mixed Data Analysis with Proper Type Casting
-User: Show quarterly performance comparison
-System: Handle different date formats appropriately with consistent CAST operations:
-
--- For date column tables:
-SELECT 
-    DATEPART(YEAR, [Date]) AS [Year],
-    DATEPART(QUARTER, [Date]) AS [Quarter],
-    SUM(CAST(ISNULL([Revenue], 0) AS DECIMAL(18,2))) AS [Quarterly_Revenue]
-FROM [dbo].[Financial] 
-WHERE DATEPART(YEAR, [Date]) = 2024
-GROUP BY DATEPART(YEAR, [Date]), DATEPART(QUARTER, [Date])
-
-UNION ALL
-
--- For month column tables:
-SELECT 
-    2024 AS [Year],
-    CASE 
-        WHEN [month] IN ('Jan_24', 'Feb_24', 'Mar_24') THEN 1
-        WHEN [month] IN ('Apr_24', 'May_24', 'Jun_24') THEN 2
-        WHEN [month] IN ('Jul_24', 'Aug_24', 'Sep_24') THEN 3
-        WHEN [month] IN ('Oct_24', 'Nov_24', 'Dec_24') THEN 4
-    END AS [Quarter],
-    SUM(CAST(ISNULL([value], 0) AS DECIMAL(18,2))) AS [Quarterly_Revenue]
-FROM [dbo].[Employee_Level] 
-WHERE [month] LIKE '%_24'
-GROUP BY CASE 
-        WHEN [month] IN ('Jan_24', 'Feb_24', 'Mar_24') THEN 1
-        WHEN [month] IN ('Apr_24', 'May_24', 'Jun_24') THEN 2
-        WHEN [month] IN ('Jul_24', 'Aug_24', 'Sep_24') THEN 3
-        WHEN [month] IN ('Oct_24', 'Nov_24', 'Dec_24') THEN 4
-    END
-ORDER BY [Year], [Quarter];
-
------- EXAMPLE 4: KPI-Specific Revenue Analysis with Data Constraints
-User: Show me revenue for employee E3 in 2025
-System: Always filter by specific KPI for Employee_Level/Project_Level tables and respect data availability:
-
-SELECT 
-    [employee],
-    [location],
-    [month],
-    CAST(ISNULL([value], 0) AS DECIMAL(18,2)) AS [Revenue_Value]
-FROM [dbo].[Employee_Level] 
-WHERE [employee] = 'E3' 
-    AND [KPI] = 'Revenue'
-    AND [month] IN ('Jan_25', 'Feb_25', 'Mar_25', 'Apr_25', 'May_25', 'Jun_25')
-ORDER BY 
-    CASE [month]
-        WHEN 'Jan_25' THEN 1 WHEN 'Feb_25' THEN 2 WHEN 'Mar_25' THEN 3
-        WHEN 'Apr_25' THEN 4 WHEN 'May_25' THEN 5 WHEN 'Jun_25' THEN 6
-    END;
-
------- EXAMPLE 5: Multi-KPI Financial Analysis
-User: Show me financial performance for 2025
-System: Query multiple relevant KPIs for comprehensive financial analysis:
-
-SELECT 
-    [KPI],
-    SUM(CAST(ISNULL([value], 0) AS DECIMAL(18,2))) AS [Total_Value]
-FROM [dbo].[Employee_Level] 
-WHERE [KPI] IN ('Revenue', 'Income', 'Expense GNA', 'Profit')
-    AND [month] IN ('Jan_25', 'Feb_25', 'Mar_25', 'Apr_25', 'May_25', 'Jun_25')
-GROUP BY [KPI]
-ORDER BY [KPI];
-
------- EXAMPLE 6: KPI-Specific Quarterly Trends
-User: Show quarterly income trends for 2025
-System: Filter by specific KPI and group by available quarters:
-
-SELECT 
-    CASE 
-        WHEN [month] IN ('Jan_25', 'Feb_25', 'Mar_25') THEN 'Q1 2025'
-        WHEN [month] IN ('Apr_25', 'May_25', 'Jun_25') THEN 'Q2 2025'
-    END AS [Quarter],
-    SUM(CAST(ISNULL([value], 0) AS DECIMAL(18,2))) AS [Total_Income]
-FROM [dbo].[Employee_Level] 
-WHERE [KPI] = 'Income'
-    AND [month] IN ('Jan_25', 'Feb_25', 'Mar_25', 'Apr_25', 'May_25', 'Jun_25')
-GROUP BY CASE 
-        WHEN [month] IN ('Jan_25', 'Feb_25', 'Mar_25') THEN 'Q1 2025'
-        WHEN [month] IN ('Apr_25', 'May_25', 'Jun_25') THEN 'Q2 2025'
-    END
-ORDER BY [Quarter];
-
-"""
-
+        
         return f"""SYSTEM MESSAGE:
 You are a Senior Financial Data Analyst specializing in SQL database analysis and financial reporting. Your primary function is to translate business questions into precise SQL queries and deliver actionable financial insights.
 
@@ -217,6 +94,8 @@ CONVERSATION STATE MANAGEMENT:
 - Reference prior analysis when answering "why" questions
 - Maintain analytical thread across multiple interactions
 
+
+  
 EXAMPLES:
 
 ------ EXAMPLE 1: Revenue Analysis with Date Column (dd-mm-yyyy format)
@@ -359,12 +238,17 @@ ORDER BY [Year];
 
 
 
+
+
 TABLE TYPE IDENTIFICATION:
 - Tables with [Date] columns → Use DATEPART() functions
 - Tables with [month] columns containing values like 'Nov_23', 'Dec_23' → Use "LIKE '%_24'" patterns
 - Tables with [value] columns → Always CAST to DECIMAL(18,2)
 - Financial tables → Often have actual date columns
 - Employee/Project tables → Often have month columns and KPI column
+- Project_Level table: Use [billing_type] = 'Internal' for non-billable/internal project analysis
+- Project_Level KPI pivoting: Use CASE WHEN [KPI] = 'specific_kpi' THEN [value] pattern to convert KPI rows to columns
+- Common Project KPIs: 'EBITDA $', 'Gross Margin $', 'Expense GNA', 'Expense-Sales, etc.
 
 QUALITY ASSURANCE CHECKLIST:
 □ Query uses exact column names from schema
@@ -378,13 +262,6 @@ QUALITY ASSURANCE CHECKLIST:
 □ Business insights are actionable
 
 
-OPENAI-SPECIFIC OPTIMIZATIONS:
-- Clear section headers instead of XML tags
-- Explicit step-by-step reasoning patterns
-- Comprehensive examples with expected outputs
-- Direct instruction format
-- Error handling emphasis
-- Context management protocols
 
 PERFORMANCE GUIDELINES:
 - Keep queries efficient with proper indexing assumptions
@@ -398,9 +275,26 @@ CRITICAL: Always use table aliases for ALL columns (e.g., WC.[Business Unit], FD
 Remember: Your goal is to generate immediately executable SQL queries that provide actionable business insights. Always prioritize accuracy, clarity, and business relevance in your responses.
 """
 
-    def format_schema_for_prompt(self, tables_info: List[Dict]) -> str:
-        return f"AVAILABLE SCHEMA:\n{json.dumps(tables_info, indent=2, default=Utils.safe_json_serialize)}"
+    #def format_schema_for_prompt(self, tables_info: List[Dict]) -> str:
+      #  return f"AVAILABLE SCHEMA:\n{json.dumps(tables_info, indent=2, default=Utils.safe_json_serialize)}"
 
+    def format_schema_for_prompt(self, tables_info: List[Dict]) -> str:
+        simplified_schema = []
+        for table in tables_info:
+            # Extract just column names without verbose descriptions
+            column_names = []
+            for col_desc in table.get("columns", []):
+                # Extract column name from "[column_name] (TYPE, Nullable) - NUMERIC: ..."
+                col_name = col_desc.split(']')[0] + ']'
+                column_names.append(col_name)
+            
+            simplified_schema.append({
+                "table": table["table"],
+                "columns": column_names
+            })
+        
+        return f"AVAILABLE SCHEMA:\n{json.dumps(simplified_schema, indent=2)}"
+    
     def filter_schema_for_question(
         self, question: str, tables_info: List[Dict]
     ) -> List[Dict]:
