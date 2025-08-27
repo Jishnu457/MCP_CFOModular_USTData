@@ -1,7 +1,6 @@
 """
 Intelligent analytics agent for advanced AI capabilities
 """
-
 import asyncio
 import json
 import time
